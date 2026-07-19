@@ -1,4 +1,13 @@
 import { useState, useEffect} from "react";
+import './App.css';
+import {
+  FormControl,
+  InputGroup,
+  Container,
+  Button,
+  Row,
+  Card,
+} from "react-bootstrap";
 
 const App = () => {
   const CLIENT_ID = import.meta.env.VITE_SPOTIFY_CLIENT_ID;
@@ -7,6 +16,7 @@ const App = () => {
   // create state to hold the search term
   const [searchInput,  setSearchInput] = useState('');
   const [accessToken, setAccessToken] = useState('');
+  const [albums, setAlbumns] = useState([]); // get artist albums
 
   // useEffect to fetch our access token
   useEffect(() => {
@@ -29,6 +39,7 @@ const App = () => {
     });
   }, []);
 
+  // search
   async function search() {
     let artistParams = {
       method: "GET",
@@ -57,37 +68,122 @@ const App = () => {
       return null;
     });
 
-    console.log("Search Input: " + searchInput);
-    console.log("Artist ID: " + artistID);
+    // get artist albums
+    await fetch(
+      "https://api.spotify.com/v1/artists/" + 
+      artistID + 
+      "/albums?include_groups=album&market=US&limit=3",
+      artistParams
+    )
+    .then((result) => result.json())
+    .then((data) => {
+      setAlbumns(data.items);
+    });
+
+     console.log("Search Input: " + searchInput);
+     console.log("Artist ID: " + artistID);
   }
 
 
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-[#121212]">
-      <div className="w-full max-w-md">
-        <div className="flex gap-2">
-          <input
-            type="text"
+    <>
+    <Container>
+        <InputGroup>
+          <FormControl
             placeholder="Search for artist"
+            type="input"
             aria-label="Search for an artist"
             onKeyDown={(event) => {
-              if (event.key === "Enter"){
+              if (event.key === "Enter") {
                 search();
-              } // search function
+              }
             }}
-            onChange={(event) => setSearchInput(event.target.value)} // setSearch
-            className="flex-1 px-4 py-2 rounded-lg border border-gray-300 text-white focus:outline-none focus:ring-2 focus:ring-gray-800"
+            onChange={(event) => setSearchInput(event.target.value)}
+            style={{
+              width: "300px",
+              height: "35px",
+              borderWidth: "0px",
+              borderStyle: "solid",
+              borderRadius: "5px",
+              marginRight: "10px",
+              paddingLeft: "10px",
+            }}
           />
-          <button
-            onClick={search}
-            className="flex items-center gap-2 px-6 py-2 bg-[#1ED760] text-[#121212] font-semibold rounded-lg hover:scale-105 hover:bg-[#1db954] transition"
-          >
-            Search
-          </button>
-        </div>
-      </div>
-    </div>
+          <Button onClick={search}>Search</Button>
+        </InputGroup>
+      </Container>
+
+
+    <Container>
+        <Row
+          style={{
+            display: "flex",
+            flexDirection: "row",
+            flexWrap: "wrap",
+            justifyContent: "space-around",
+            alignContent: "center",
+          }}
+        >
+          {albums.map((album) => {
+            return (
+              <Card
+                key={album.id}
+                style={{
+                  backgroundColor: "white",
+                  margin: "10px",
+                  borderRadius: "5px",
+                  marginBottom: "30px",
+                }}
+              >
+                <Card.Img
+                  width={200}
+                  src={album.images[0].url}
+                  style={{
+                    borderRadius: "4%",
+                  }}
+                />
+                <Card.Body>
+                  <Card.Title
+                    style={{
+                      whiteSpace: "wrap",
+                      fontWeight: "bold",
+                      maxWidth: "200px",
+                      fontSize: "18px",
+                      marginTop: "10px",
+                      color: "black",
+                    }}
+                  >
+                    {album.name}
+                  </Card.Title>
+                  <Card.Text
+                    style={{
+                      color: "black",
+                    }}
+                  >
+                    Release Date: <br /> {album.release_date}
+                  </Card.Text>
+                  <Button
+                    href={album.external_urls.spotify}
+                    style={{
+                      backgroundColor: "black",
+                      color: "white",
+                      fontWeight: "bold",
+                      fontSize: "15px",
+                      borderRadius: "5px",
+                      padding: "10px",
+                    }}
+                  >
+                    Album Link
+                  </Button>
+                </Card.Body>
+              </Card>
+            );
+          })}
+        </Row>
+      </Container>
+    </>
+   
   )
 }
 
