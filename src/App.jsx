@@ -80,11 +80,9 @@ const App = () => {
       setAlbumns(data.items);
     });
 
-     console.log("Search Input: " + searchInput);
-     console.log("Artist ID: " + artistID);
+    console.log("Search Input: " + searchInput);
+    console.log("Artist ID: " + artistID);
   }
-
-
 
   return (
     <>
@@ -113,7 +111,6 @@ const App = () => {
           <Button onClick={search}>Search</Button>
         </InputGroup>
       </Container>
-
 
     <Container>
         <Row
