@@ -88,8 +88,8 @@ const App = () => {
     <>
     <Container>
         <InputGroup>
-          <FormControl
-            placeholder="Search for artist"
+          <FormControl 
+            placeholder ="Search for artist?"
             type="input"
             aria-label="Search for an artist"
             onKeyDown={(event) => {
@@ -103,7 +103,7 @@ const App = () => {
               height: "35px",
               borderWidth: "0px",
               borderStyle: "solid",
-              borderRadius: "5px",
+              borderRadius: "50px",
               marginRight: "10px",
               paddingLeft: "10px",
             }}
@@ -113,7 +113,7 @@ const App = () => {
       </Container>
 
     <Container>
-        <Row
+        <Row className="flex flex-row flex-wrap justify-around content-center"
           style={{
             display: "flex",
             flexDirection: "row",
@@ -163,8 +163,8 @@ const App = () => {
                   <Button
                     href={album.external_urls.spotify}
                     style={{
-                      backgroundColor: "black",
-                      color: "white",
+                      backgroundColor: "#1DB954",
+                      color: "#121212",
                       fontWeight: "bold",
                       fontSize: "15px",
                       borderRadius: "5px",
