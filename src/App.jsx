@@ -18,6 +18,7 @@ const App = () => {
   const [accessToken, setAccessToken] = useState('');
   const [albums, setAlbumns] = useState([]); // get artist albums
 
+
   // useEffect to fetch our access token
   useEffect(() => {
     let authParams = {
@@ -37,7 +38,7 @@ const App = () => {
     .catch((error) => {
       console.error("Auth error:", error);
     });
-  }, []);
+  },);
 
   // search
   async function search() {
@@ -72,7 +73,7 @@ const App = () => {
     await fetch(
       "https://api.spotify.com/v1/artists/" + 
       artistID + 
-      "/albums?include_groups=album&market=US&limit=3",
+      "/albums?include_groups=album&market=US&limit=5",
       artistParams
     )
     .then((result) => result.json())
