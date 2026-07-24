@@ -1,7 +1,10 @@
+import { Search as SearchIcon } from "lucide-react";
 const Search = ({searchInput, setSearchInput, onSearch}) => {
   return (
     <div className="search-container">
       <div className="search-group">
+        <div className="search-input-wrapper">
+          <SearchIcon size={18} className="search-icon" />
         <input
           className="search-input"
           type="text"
@@ -15,6 +18,7 @@ const Search = ({searchInput, setSearchInput, onSearch}) => {
           }}
           onChange={(event) => setSearchInput(event.target.value)}
         />
+         </div>
         <button className="search-button" onClick={onSearch}>
           Search
         </button>

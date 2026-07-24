@@ -41,3 +41,24 @@
 .search-button:hover {
     background-color: #1db954;
 }
+
+.card {
+    padding: 16px;
+}
+
+.search-input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.search-icon {
+    position: absolute;
+    left: 10px;
+    color: #B3B3B3;
+    pointer-events: none;
+}
+
+.search-input {
+    padding-left: 34px;
+}

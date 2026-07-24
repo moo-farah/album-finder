@@ -4,7 +4,7 @@ const AlbumCard = ({ album }) => {
     <>
     <Card
       style={{
-        backgroundColor: "white",
+        backgroundColor: "#1F1F1F",
         margin: "10px",
         borderRadius: "5px",
         marginBottom: "30px",
@@ -25,14 +25,14 @@ const AlbumCard = ({ album }) => {
             maxWidth: "200px",
             fontSize: "18px",
             marginTop: "10px",
-            color: "black",
+            color: "#fff",
           }}
         >
           {album.name}
         </Card.Title>
         <Card.Text
           style={{
-            color: "black",
+            color: "#fff",
           }}
         >
           Release Date: <br /> {album.release_date}
@@ -40,8 +40,8 @@ const AlbumCard = ({ album }) => {
         <Button
           href={album.external_urls.spotify}
           style={{
-            backgroundColor: "#121212",
-            color: "#B3B3B3",
+            backgroundColor: "#1ED760",
+            color: "#121212",
             fontWeight: "medium",
             fontSize: "15px",
             borderRadius: "5px",
