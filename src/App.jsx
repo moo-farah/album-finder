@@ -1,13 +1,8 @@
 import { useState, useEffect} from "react";
 import './App.css';
-import {
-  FormControl,
-  InputGroup,
-  Container,
-  Button,
-  Row,
-  Card,
-} from "react-bootstrap";
+import Search from "./components/Search";
+import AlbumCard from "./components/AlbumCard";
+import { Container, Row } from "react-bootstrap";
 
 const App = () => {
   const CLIENT_ID = import.meta.env.VITE_SPOTIFY_CLIENT_ID;
@@ -87,34 +82,14 @@ const App = () => {
 
   return (
     <>
-    <Container>
-        <InputGroup>
-          <FormControl 
-            placeholder ="Search for artist?"
-            type="input"
-            aria-label="Search for an artist"
-            onKeyDown={(event) => {
-              if (event.key === "Enter") {
-                search();
-              }
-            }}
-            onChange={(event) => setSearchInput(event.target.value)}
-            style={{
-              width: "300px",
-              height: "35px",
-              borderWidth: "0px",
-              borderStyle: "solid",
-              borderRadius: "50px",
-              marginRight: "10px",
-              paddingLeft: "10px",
-            }}
-          />
-          <Button onClick={search}>Search</Button>
-        </InputGroup>
-      </Container>
+    <Search 
+      searchInput={searchInput}
+      setSearchInput={setSearchInput}
+      onSearch={search}
+    />
 
     <Container>
-        <Row className="flex flex-row flex-wrap justify-around content-center"
+        <Row
           style={{
             display: "flex",
             flexDirection: "row",
@@ -123,66 +98,13 @@ const App = () => {
             alignContent: "center",
           }}
         >
-          {albums.map((album) => {
-            return (
-              <Card
-                key={album.id}
-                style={{
-                  backgroundColor: "white",
-                  margin: "10px",
-                  borderRadius: "5px",
-                  marginBottom: "30px",
-                }}
-              >
-                <Card.Img
-                  width={200}
-                  src={album.images[0].url}
-                  style={{
-                    borderRadius: "4%",
-                  }}
-                />
-                <Card.Body>
-                  <Card.Title
-                    style={{
-                      whiteSpace: "wrap",
-                      fontWeight: "bold",
-                      maxWidth: "200px",
-                      fontSize: "18px",
-                      marginTop: "10px",
-                      color: "black",
-                    }}
-                  >
-                    {album.name}
-                  </Card.Title>
-                  <Card.Text
-                    style={{
-                      color: "black",
-                    }}
-                  >
-                    Release Date: <br /> {album.release_date}
-                  </Card.Text>
-                  <Button
-                    href={album.external_urls.spotify}
-                    style={{
-                      backgroundColor: "#1DB954",
-                      color: "#121212",
-                      fontWeight: "bold",
-                      fontSize: "15px",
-                      borderRadius: "5px",
-                      padding: "10px",
-                    }}
-                  >
-                    Album Link
-                  </Button>
-                </Card.Body>
-              </Card>
-            );
-          })}
+          {albums.map((album) => (
+            <AlbumCard key={album.id} album={album} />
+          ))}
         </Row>
       </Container>
     </>
-   
-  )
+  );
 }
 
-export default App
+export default App;
