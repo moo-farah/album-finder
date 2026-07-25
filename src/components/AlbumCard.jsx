@@ -4,9 +4,9 @@ const AlbumCard = ({ album }) => {
     <>
     <Card
       style={{
-        backgroundColor: "#1F1F1F",
+        backgroundColor: " #2A2A2A",
         margin: "10px",
-        borderRadius: "5px",
+        borderRadius: "10px",
         marginBottom: "30px",
       }}
     >
@@ -40,11 +40,13 @@ const AlbumCard = ({ album }) => {
         <Button
           href={album.external_urls.spotify}
           style={{
+            display: "inline-block",
             backgroundColor: "#1ED760",
             color: "#121212",
-            fontWeight: "medium",
+            fontWeight: "bold",
             fontSize: "15px",
             borderRadius: "5px",
+            marginTop: "10px",
             padding: "10px",
           }}
         >

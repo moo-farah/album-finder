@@ -4,10 +4,10 @@
 
 theme {
     --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
-}
+} 
 
-:root {
+body {
     color-scheme: light dark;
     color: rgba(255, 255, 255, 0.87);
-    background-image: linear-gradient(to right, #0f0c29, #302b63, #24243e);
+    background-image: linear-gradient(to right, #191414, #282828, #121212);
 }
