@@ -7,7 +7,7 @@ theme {
 } 
 
 body {
-    color-scheme: light dark;
-    color: rgba(255, 255, 255, 0.87);
-    background-image: linear-gradient(to right, #191414, #282828, #121212);
+    color-scheme: dark;
+    color: #fff;
+    background-color: #121212;
 }

@@ -1,62 +1,63 @@
-import { Card, Button } from "react-bootstrap"
-const AlbumCard = ({ album }) => {
-  return (
-    <>
-    <Card
-      style={{
-        backgroundColor: " #2A2A2A",
-        margin: "10px",
-        borderRadius: "10px",
-        marginBottom: "30px",
-      }}
-    >
-      <Card.Img
-        width={200}
-        src={album.images[0].url}
-        style={{
-          borderRadius: "4%",
-        }}
-      />
-      <Card.Body>
-        <Card.Title
-          style={{
-            whiteSpace: "wrap",
-            fontWeight: "bold",
-            maxWidth: "200px",
-            fontSize: "18px",
-            marginTop: "10px",
-            color: "#fff",
-          }}
-        >
-          {album.name}
-        </Card.Title>
-        <Card.Text
-          style={{
-            color: "#fff",
-          }}
-        >
-          Release Date: <br /> {album.release_date}
-        </Card.Text>
-        <Button
-          href={album.external_urls.spotify}
-          style={{
-            display: "inline-block",
-            backgroundColor: "#1ED760",
-            color: "#121212",
-            fontWeight: "bold",
-            fontSize: "15px",
-            borderRadius: "5px",
-            marginTop: "10px",
-            padding: "10px",
-          }}
-        >
-          Album Link
-        </Button>
-      </Card.Body>
-    </Card>
-    </>
-    
-  )
+import { Play } from "lucide-react";
+
+function formatReleaseDate(date) {
+  if (!date) {
+    return "Unknown";
+  }
+
+  if (/^\d{4}$/.test(date)) {
+    return date;
+  }
+
+  const [year, month, day] = date.split("-").map(Number);
+  if (!year || !month) {
+    return date;
+  }
+
+  const parsed = new Date(year, month - 1, day || 1);
+  if (Number.isNaN(parsed.getTime())) {
+    return date;
+  }
+
+  if (!day) {
+    return parsed.toLocaleDateString("en-US", { month: "short", year: "numeric" });
+  }
+
+  return parsed.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
 }
+
+const AlbumCard = ({ album }) => {
+  const imageUrl = album.images?.[0]?.url;
+  const spotifyUrl = album.external_urls?.spotify;
+
+  return (
+    <article className="album-card">
+      <div className="album-cover">
+        {imageUrl ? (
+          <img src={imageUrl} alt="" />
+        ) : (
+          <div className="album-cover-fallback" />
+        )}
+        {spotifyUrl && (
+          <a
+            className="album-play"
+            href={spotifyUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label={"Open " + album.name + " in Spotify"}
+          >
+            <Play size={22} fill="currentColor" />
+          </a>
+        )}
+      </div>
+      <h3 title={album.name}>{album.name}</h3>
+      <p>Album • {formatReleaseDate(album.release_date)}</p>
+    </article>
+  );
+};
 
 export default AlbumCard;
