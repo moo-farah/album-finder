@@ -30,18 +30,32 @@ function formatReleaseDate(date) {
   });
 }
 
-const AlbumCard = ({ album }) => {
+const TYPE_LABELS = {
+  album: "Album",
+  single: "Single",
+  compilation: "Compilation",
+};
+
+const AlbumCard = ({ album, onOpen }) => {
   const imageUrl = album.images?.[0]?.url;
   const spotifyUrl = album.external_urls?.spotify;
+  const typeLabel = TYPE_LABELS[album.album_type] || "Album";
 
   return (
     <article className="album-card">
       <div className="album-cover">
-        {imageUrl ? (
-          <img src={imageUrl} alt="" />
-        ) : (
-          <div className="album-cover-fallback" />
-        )}
+        <button
+          type="button"
+          className="album-cover-button"
+          onClick={() => onOpen(album)}
+          aria-label={"Show tracks for " + album.name}
+        >
+          {imageUrl ? (
+            <img src={imageUrl} alt="" />
+          ) : (
+            <div className="album-cover-fallback" />
+          )}
+        </button>
         {spotifyUrl && (
           <a
             className="album-play"
@@ -55,7 +69,9 @@ const AlbumCard = ({ album }) => {
         )}
       </div>
       <h3 title={album.name}>{album.name}</h3>
-      <p>Album • {formatReleaseDate(album.release_date)}</p>
+      <p>
+        {typeLabel} • {formatReleaseDate(album.release_date)}
+      </p>
     </article>
   );
 };

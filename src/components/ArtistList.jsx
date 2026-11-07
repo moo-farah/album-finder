@@ -9,6 +9,7 @@ const ArtistList = ({ artists, selectedArtistId, onSelect, disabled }) => {
       <ul>
         {artists.map((artist) => {
           const imageUrl = artist.images?.[0]?.url;
+          const genres = (artist.genres ?? []).slice(0, 2).join(", ");
           const isSelected = artist.id === selectedArtistId;
 
           return (
@@ -25,7 +26,10 @@ const ArtistList = ({ artists, selectedArtistId, onSelect, disabled }) => {
                 ) : (
                   <span className="artist-fallback" />
                 )}
-                <span>{artist.name}</span>
+                <span className="artist-copy">
+                  <span>{artist.name}</span>
+                  {genres && <span className="artist-genres">{genres}</span>}
+                </span>
               </button>
             </li>
           );
