@@ -219,9 +219,43 @@
 .artist-header a,
 .album-detail a {
   display: inline-block;
-  margin-top: 8px;
   color: #1ed760;
   font-weight: 700;
+}
+
+.artist-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.empty-state {
+  margin: 8px 0 24px;
+}
+
+.empty-state p {
+  margin: 0 0 10px;
+  color: #b3b3b3;
+}
+
+.related-artists {
+  margin-top: 36px;
+}
+
+.related-artists h2 {
+  margin: 0 0 12px;
+  font-size: 1.15rem;
+}
+
+.related-artists ul {
+  display: flex;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  overflow-x: auto;
 }
 
 .album-cover-button {
@@ -378,6 +412,17 @@
   align-items: center;
   padding: 8px 0;
   border-top: 1px solid #2a2a2a;
+}
+
+.track-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.track-actions audio {
+  width: 160px;
+  height: 32px;
 }
 
 .track-number,

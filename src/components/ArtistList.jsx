@@ -3,10 +3,25 @@ const ArtistList = ({ artists, selectedArtistId, onSelect, disabled }) => {
     return null;
   }
 
+  function handleKeyDown(event) {
+    if (event.key !== "ArrowRight" && event.key !== "ArrowLeft") {
+      return;
+    }
+
+    const buttons = [...event.currentTarget.querySelectorAll("button")];
+    const index = buttons.indexOf(document.activeElement);
+    if (index < 0) return;
+
+    event.preventDefault();
+    const offset = event.key === "ArrowRight" ? 1 : -1;
+    const nextIndex = (index + offset + buttons.length) % buttons.length;
+    buttons[nextIndex].focus();
+  }
+
   return (
     <section className="artist-list" aria-label="Matching artists">
       <h2>Choose an artist</h2>
-      <ul>
+      <ul onKeyDown={handleKeyDown}>
         {artists.map((artist) => {
           const imageUrl = artist.images?.[0]?.url;
           const genres = (artist.genres ?? []).slice(0, 2).join(", ");
@@ -22,7 +37,7 @@ const ArtistList = ({ artists, selectedArtistId, onSelect, disabled }) => {
                 aria-pressed={isSelected}
               >
                 {imageUrl ? (
-                  <img src={imageUrl} alt="" />
+                  <img src={imageUrl} alt={artist.name} />
                 ) : (
                   <span className="artist-fallback" />
                 )}

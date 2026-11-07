@@ -1,13 +1,19 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import "./App.css";
 import Search from "./components/Search";
 import ArtistList from "./components/ArtistList";
 import AlbumCard from "./components/AlbumCard";
 import AlbumDetail from "./components/AlbumDetail";
 import {
+  albumUrl,
+  artistAlbumsUrl,
+  artistUrl,
   prepareAlbums,
   readRecent,
+  relatedArtistsUrl,
+  searchArtistsUrl,
   spotifyGet,
+  SUGGESTED_ARTISTS,
   writeRecent,
 } from "./spotify";
 
@@ -32,6 +38,8 @@ const App = () => {
   const [recent, setRecent] = useState(readRecent);
   const [albumDetail, setAlbumDetail] = useState(null);
   const [isLoadingTracks, setIsLoadingTracks] = useState(false);
+  const [relatedArtists, setRelatedArtists] = useState([]);
+  const [linkCopied, setLinkCopied] = useState(false);
 
   const albumRequest = useRef(0);
   const trackRequest = useRef(0);
@@ -90,10 +98,7 @@ const App = () => {
       return artist;
     }
 
-    const { ok, data } = await spotifyGet(
-      "https://api.spotify.com/v1/artists/" + artist.id,
-      accessToken
-    );
+    const { ok, data } = await spotifyGet(artistUrl(artist.id), accessToken);
     if (!ok) {
       return null;
     }
@@ -113,13 +118,7 @@ const App = () => {
       setIsLoadingMore(true);
     }
 
-    const endpoint =
-      url ||
-      "https://api.spotify.com/v1/artists/" +
-        artist.id +
-        "/albums?include_groups=" +
-        group +
-        "&market=US&limit=10";
+    const endpoint = url || artistAlbumsUrl(artist.id, group);
 
     try {
       const { ok, data } = await spotifyGet(endpoint, accessToken);
@@ -165,6 +164,8 @@ const App = () => {
     }
 
     setAlbumGroup(group);
+    setRelatedArtists([]);
+    setLinkCopied(false);
     const fullArtist = await fetchArtist(artist);
     if (!fullArtist) {
       setMessage("Could not load that artist. Please try again.");
@@ -184,6 +185,20 @@ const App = () => {
     });
 
     await loadAlbums(fullArtist, { group });
+    loadRelatedArtists(fullArtist.id);
+  }
+
+  async function loadRelatedArtists(artistId) {
+    try {
+      const { ok, data } = await spotifyGet(relatedArtistsUrl(artistId), accessToken);
+      if (!ok) {
+        setRelatedArtists([]);
+        return;
+      }
+      setRelatedArtists((data.artists ?? []).slice(0, 6));
+    } catch {
+      setRelatedArtists([]);
+    }
   }
 
   useEffect(() => {
@@ -195,10 +210,7 @@ const App = () => {
     let cancelled = false;
 
     async function restoreArtist() {
-      const { ok, data } = await spotifyGet(
-        "https://api.spotify.com/v1/artists/" + artistId,
-        accessToken
-      );
+      const { ok, data } = await spotifyGet(artistUrl(artistId), accessToken);
       if (cancelled) return;
       if (!ok) {
         setMessage("Could not load that artist. Please try again.");
@@ -209,6 +221,7 @@ const App = () => {
       rememberArtist(data);
       setArtists([data]);
       await loadAlbums(data, { group: "album" });
+      loadRelatedArtists(data.id);
     }
 
     restoreArtist();
@@ -219,8 +232,11 @@ const App = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [accessToken]);
 
-  async function search() {
-    const query = searchInput.trim();
+  async function search(queryOverride) {
+    const query = (queryOverride ?? searchInput).trim();
+    if (queryOverride) {
+      setSearchInput(query);
+    }
 
     if (!query) {
       setMessage("Enter an artist name.");
@@ -236,12 +252,7 @@ const App = () => {
     setMessage("Searching…");
 
     try {
-      const { ok, data } = await spotifyGet(
-        "https://api.spotify.com/v1/search?q=" +
-          encodeURIComponent(query) +
-          "&type=artist&limit=5",
-        accessToken
-      );
+      const { ok, data } = await spotifyGet(searchArtistsUrl(query), accessToken);
 
       if (!ok) {
         setMessage("Search failed. Please try again.");
@@ -255,6 +266,7 @@ const App = () => {
         setAlbums([]);
         setNextUrl("");
         setAlbumDetail(null);
+        setRelatedArtists([]);
         setMessage('No artist found for "' + query + '".');
         return;
       }
@@ -288,10 +300,7 @@ const App = () => {
     setIsLoadingTracks(true);
 
     try {
-      const { ok, data } = await spotifyGet(
-        "https://api.spotify.com/v1/albums/" + album.id,
-        accessToken
-      );
+      const { ok, data } = await spotifyGet(albumUrl(album.id), accessToken);
       if (requestId !== trackRequest.current) return;
       if (!ok) {
         setMessage("Could not load tracks. Please try again.");
@@ -321,8 +330,24 @@ const App = () => {
     }
   }
 
+  const closeAlbumDetail = useCallback(() => {
+    trackRequest.current += 1;
+    setAlbumDetail(null);
+  }, []);
+
+  async function copyArtistLink() {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      setLinkCopied(true);
+      window.setTimeout(() => setLinkCopied(false), 2000);
+    } catch {
+      setMessage("Could not copy the link.");
+    }
+  }
+
   const followerCount = selectedArtist?.followers?.total;
   const artistGenres = (selectedArtist?.genres ?? []).slice(0, 3).join(", ");
+  const showEmptyState = !selectedArtist && !isSearching && recent.length === 0;
 
   return (
     <main className="page">
@@ -354,6 +379,24 @@ const App = () => {
         </div>
       )}
 
+      {showEmptyState && (
+        <div className="empty-state">
+          <p>Try Drake, Radiohead, or Adele</p>
+          <div className="recent">
+            {SUGGESTED_ARTISTS.map((name) => (
+              <button
+                key={name}
+                type="button"
+                onClick={() => search(name)}
+                disabled={isSearching || !accessToken}
+              >
+                {name}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       {message && (
         <p className="status-message" role="status">
           {message}
@@ -370,7 +413,7 @@ const App = () => {
       {selectedArtist && (
         <section className="artist-header">
           {selectedArtist.images?.[0]?.url ? (
-            <img src={selectedArtist.images[0].url} alt="" />
+            <img src={selectedArtist.images[0].url} alt={selectedArtist.name} />
           ) : (
             <div className="artist-fallback large" />
           )}
@@ -380,15 +423,20 @@ const App = () => {
             {typeof followerCount === "number" && (
               <p>{followerCount.toLocaleString("en-US")} followers</p>
             )}
-            {selectedArtist.external_urls?.spotify && (
-              <a
-                href={selectedArtist.external_urls.spotify}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Open artist in Spotify
-              </a>
-            )}
+            <div className="artist-actions">
+              {selectedArtist.external_urls?.spotify && (
+                <a
+                  href={selectedArtist.external_urls.spotify}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Open artist in Spotify
+                </a>
+              )}
+              <button type="button" className="text-button" onClick={copyArtistLink}>
+                {linkCopied ? "Link copied" : "Copy link"}
+              </button>
+            </div>
           </div>
         </section>
       )}
@@ -413,10 +461,7 @@ const App = () => {
       <AlbumDetail
         album={albumDetail}
         isLoading={isLoadingTracks}
-        onClose={() => {
-          trackRequest.current += 1;
-          setAlbumDetail(null);
-        }}
+        onClose={closeAlbumDetail}
       />
 
       <section className="album-grid" aria-label="Albums">
@@ -434,6 +479,31 @@ const App = () => {
         >
           {isLoadingMore ? "Loading more..." : "Load more"}
         </button>
+      )}
+
+      {relatedArtists.length > 0 && (
+        <section className="related-artists" aria-label="Related artists">
+          <h2>Fans also like</h2>
+          <ul>
+            {relatedArtists.map((artist) => (
+              <li key={artist.id}>
+                <button
+                  type="button"
+                  className="artist-button"
+                  onClick={() => selectArtist(artist)}
+                  disabled={isSearching || isLoadingAlbums}
+                >
+                  {artist.images?.[0]?.url ? (
+                    <img src={artist.images[0].url} alt={artist.name} />
+                  ) : (
+                    <span className="artist-fallback" />
+                  )}
+                  <span>{artist.name}</span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        </section>
       )}
     </main>
   );

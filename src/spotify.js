@@ -1,5 +1,7 @@
 export const RECENT_KEY = "album-finder-recent";
 
+export const SUGGESTED_ARTISTS = ["Drake", "Radiohead", "Adele"];
+
 export async function spotifyGet(url, token) {
   const response = await fetch(url, {
     headers: {
@@ -8,6 +10,36 @@ export async function spotifyGet(url, token) {
   });
   const data = await response.json();
   return { ok: response.ok, data };
+}
+
+export function searchArtistsUrl(query) {
+  return (
+    "https://api.spotify.com/v1/search?q=" +
+    encodeURIComponent(query) +
+    "&type=artist&limit=5"
+  );
+}
+
+export function artistUrl(id) {
+  return "https://api.spotify.com/v1/artists/" + id;
+}
+
+export function artistAlbumsUrl(id, group) {
+  return (
+    "https://api.spotify.com/v1/artists/" +
+    id +
+    "/albums?include_groups=" +
+    group +
+    "&market=US&limit=10"
+  );
+}
+
+export function albumUrl(id) {
+  return "https://api.spotify.com/v1/albums/" + id;
+}
+
+export function relatedArtistsUrl(id) {
+  return "https://api.spotify.com/v1/artists/" + id + "/related-artists";
 }
 
 export function prepareAlbums(items) {
@@ -31,6 +63,36 @@ export function formatDuration(ms) {
   const minutes = Math.floor(totalSeconds / 60);
   const seconds = totalSeconds % 60;
   return minutes + ":" + String(seconds).padStart(2, "0");
+}
+
+export function formatReleaseDate(date) {
+  if (!date) {
+    return "Unknown";
+  }
+
+  if (/^\d{4}$/.test(date)) {
+    return date;
+  }
+
+  const [year, month, day] = date.split("-").map(Number);
+  if (!year || !month) {
+    return date;
+  }
+
+  const parsed = new Date(year, month - 1, day || 1);
+  if (Number.isNaN(parsed.getTime())) {
+    return date;
+  }
+
+  if (!day) {
+    return parsed.toLocaleDateString("en-US", { month: "short", year: "numeric" });
+  }
+
+  return parsed.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
 }
 
 export function readRecent() {

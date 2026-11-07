@@ -1,6 +1,5 @@
 import { defineConfig, loadEnv } from 'vite'
 import react from '@vitejs/plugin-react'
-import tailwindcss from '@tailwindcss/vite'
 import { getSpotifyAppToken } from './server/spotifyToken.js'
 
 function spotifyTokenDevApi(env) {
@@ -51,6 +50,6 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
 
   return {
-    plugins: [react(), tailwindcss(), spotifyTokenDevApi(env)],
+    plugins: [react(), spotifyTokenDevApi(env)],
   }
 })

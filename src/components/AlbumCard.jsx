@@ -1,34 +1,5 @@
 import { Play } from "lucide-react";
-
-function formatReleaseDate(date) {
-  if (!date) {
-    return "Unknown";
-  }
-
-  if (/^\d{4}$/.test(date)) {
-    return date;
-  }
-
-  const [year, month, day] = date.split("-").map(Number);
-  if (!year || !month) {
-    return date;
-  }
-
-  const parsed = new Date(year, month - 1, day || 1);
-  if (Number.isNaN(parsed.getTime())) {
-    return date;
-  }
-
-  if (!day) {
-    return parsed.toLocaleDateString("en-US", { month: "short", year: "numeric" });
-  }
-
-  return parsed.toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
-}
+import { formatReleaseDate } from "../spotify";
 
 const TYPE_LABELS = {
   album: "Album",
@@ -51,7 +22,7 @@ const AlbumCard = ({ album, onOpen }) => {
           aria-label={"Show tracks for " + album.name}
         >
           {imageUrl ? (
-            <img src={imageUrl} alt="" />
+            <img src={imageUrl} alt={album.name} />
           ) : (
             <div className="album-cover-fallback" />
           )}

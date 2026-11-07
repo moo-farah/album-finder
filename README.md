@@ -21,13 +21,15 @@ Album Finder searches Spotify for an artist and shows their releases in a dark, 
 - [x] **Recent searches are saved in the browser**
 - [x] **The selected artist is stored in the URL, so a refresh keeps the same page**
 - [x] **Spotify access token is requested on the server and refreshed before it expires**
+- [x] **Suggested artists on the first visit, and a copy-link button for the current artist**
+- [x] **Related artists and 30-second track previews when Spotify provides them**
 
 ## Tech Stack
 
 - React 19 + Vite — UI and build tooling
 - Custom CSS — layout and Spotify-style cards
 - lucide-react — search and play icons
-- Spotify Web API — artist search, albums, and track lists
+- Spotify Web API — artist search, albums, related artists, and track lists
 
 ## Run it locally
 

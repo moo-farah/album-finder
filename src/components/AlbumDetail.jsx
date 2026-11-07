@@ -1,6 +1,27 @@
+import { useEffect, useRef } from "react";
 import { formatDuration } from "../spotify";
 
 const AlbumDetail = ({ album, isLoading, onClose }) => {
+  const panelRef = useRef(null);
+
+  useEffect(() => {
+    if (!album?.id) return;
+    panelRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [album?.id]);
+
+  useEffect(() => {
+    if (!album) return;
+
+    function onKeyDown(event) {
+      if (event.key === "Escape") {
+        onClose();
+      }
+    }
+
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [album, onClose]);
+
   if (!album) {
     return null;
   }
@@ -10,9 +31,13 @@ const AlbumDetail = ({ album, isLoading, onClose }) => {
   const tracks = album.tracks ?? [];
 
   return (
-    <section className="album-detail" aria-label="Album tracks">
+    <section ref={panelRef} className="album-detail" aria-label="Album tracks">
       <div className="album-detail-top">
-        {imageUrl ? <img src={imageUrl} alt="" /> : <div className="album-cover-fallback" />}
+        {imageUrl ? (
+          <img src={imageUrl} alt={album.name} />
+        ) : (
+          <div className="album-cover-fallback" />
+        )}
         <div>
           <p className="album-detail-kicker">Tracks</p>
           <h2>{album.name}</h2>
@@ -35,7 +60,14 @@ const AlbumDetail = ({ album, isLoading, onClose }) => {
             <li key={track.id}>
               <span className="track-number">{track.track_number}</span>
               <span className="track-name">{track.name}</span>
-              <span className="track-time">{formatDuration(track.duration_ms)}</span>
+              <span className="track-actions">
+                {track.preview_url && (
+                  <audio controls preload="none" src={track.preview_url}>
+                    Preview
+                  </audio>
+                )}
+                <span className="track-time">{formatDuration(track.duration_ms)}</span>
+              </span>
             </li>
           ))}
         </ol>
