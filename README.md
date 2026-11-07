@@ -20,7 +20,7 @@ Album Finder searches Spotify for an artist and shows their releases in a dark, 
 - [x] **Green play button opens that release on Spotify**
 - [x] **Recent searches are saved in the browser**
 - [x] **The selected artist is stored in the URL, so a refresh keeps the same page**
-- [x] **Spotify access token is requested with the Client Credentials flow and refreshed before it expires**
+- [x] **Spotify access token is requested on the server and refreshed before it expires**
 
 ## Tech Stack
 
@@ -35,8 +35,11 @@ Album Finder searches Spotify for an artist and shows their releases in a dark, 
 2. Create a `.env` file in the project root:
 
 ```
-VITE_SPOTIFY_CLIENT_ID=your_client_id
-VITE_SPOTIFY_CLIENT_SECRET=your_client_secret
+SPOTIFY_CLIENT_ID=your_client_id
+SPOTIFY_CLIENT_SECRET=your_client_secret
 ```
 
+These names have no `VITE_` prefix, so Vite does not put them in the browser bundle. The page asks `/api/token` for a short-lived access token, and only the server sends the client secret to Spotify.
+
 3. Start the app with `npm run dev` and open `http://localhost:5173/`.
+4. On Vercel, add the same two variables in the project settings. The `api/token.js` function reads them there.

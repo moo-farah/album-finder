@@ -18,9 +18,6 @@ const FILTERS = [
 ];
 
 const App = () => {
-  const CLIENT_ID = import.meta.env.VITE_SPOTIFY_CLIENT_ID;
-  const SECRET_ID = import.meta.env.VITE_SPOTIFY_CLIENT_SECRET;
-
   const [searchInput, setSearchInput] = useState("");
   const [accessToken, setAccessToken] = useState("");
   const [artists, setArtists] = useState([]);
@@ -46,21 +43,11 @@ const App = () => {
 
     async function loadToken() {
       try {
-        const response = await fetch("https://accounts.spotify.com/api/token", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/x-www-form-urlencoded",
-          },
-          body:
-            "grant_type=client_credentials&client_id=" +
-            CLIENT_ID +
-            "&client_secret=" +
-            SECRET_ID,
-        });
+        const response = await fetch("/api/token");
         const data = await response.json();
         if (cancelled) return;
 
-        if (!data.access_token) {
+        if (!response.ok || !data.access_token) {
           setMessage("Could not connect to Spotify. Check the app credentials.");
           return;
         }
@@ -83,7 +70,7 @@ const App = () => {
       cancelled = true;
       clearTimeout(refreshTimer);
     };
-  }, [CLIENT_ID, SECRET_ID]);
+  }, []);
 
   function rememberArtist(artist) {
     const entry = {
