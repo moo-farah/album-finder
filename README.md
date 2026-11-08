@@ -5,7 +5,7 @@ Time spent:  **24 hours**
 
 ## An Overview
 
-Album Finder searches Spotify for an artist and shows their releases in a dark, Spotify-style grid. You can choose the right artist, switch between albums, singles, and compilations, load more results, and open a track list without leaving the page.
+Album Finder searches Spotify for an artist and shows their releases in a dark, Spotify-style grid. You can choose the right artist, switch between albums and singles, load more results, and open a track list without leaving the page.
 
 ## Features Implemented
 
@@ -14,7 +14,7 @@ Album Finder searches Spotify for an artist and shows their releases in a dark, 
 - [x] **Artist header with photo, name, and a link to Spotify**
 - [x] **Album grid with cover art, release type, and release date**
 - [x] **Duplicate album names are removed and results are sorted newest first**
-- [x] **Filters for albums, singles, and compilations**
+- [x] **Filters for albums and singles**
 - [x] **Load more than the first 10 releases**
 - [x] **Click a cover to see the track list and track lengths**
 - [x] **Green play button opens that release on Spotify**

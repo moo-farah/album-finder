@@ -26,7 +26,7 @@ const Search = ({ searchInput, setSearchInput, onSearch, isLoading }) => {
             ref={inputRef}
             className="search-input"
             type="text"
-            placeholder="Search for an artist"
+            placeholder={isLoading ? "Searching..." : "Search for an artist"}
             aria-label="Search for an artist"
             value={searchInput}
             disabled={isLoading}

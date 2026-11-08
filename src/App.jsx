@@ -23,7 +23,6 @@ import {
 const FILTERS = [
   { id: "album", label: "Albums", empty: "albums" },
   { id: "single", label: "Singles", empty: "singles" },
-  { id: "compilation", label: "Compilations", empty: "compilations" },
 ];
 
 function updateUrlParam(name, value) {
@@ -550,7 +549,7 @@ const App = () => {
                   Open artist in Spotify
                 </a>
               )}
-              <button type="button" className="text-button" onClick={copyArtistLink}>
+              <button type="button" className="copy-link" onClick={copyArtistLink}>
                 {linkCopied ? "Link copied" : "Copy link"}
               </button>
             </div>

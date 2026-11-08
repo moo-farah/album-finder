@@ -4,7 +4,6 @@ import { formatReleaseDate } from "../spotify";
 const TYPE_LABELS = {
   album: "Album",
   single: "Single",
-  compilation: "Compilation",
 };
 
 const AlbumCard = ({ album, onOpen, isFavorite, onToggleFavorite }) => {
