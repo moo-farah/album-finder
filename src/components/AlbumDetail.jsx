@@ -30,6 +30,15 @@ const AlbumDetail = ({ album, isLoading, onClose }) => {
   const spotifyUrl = album.external_urls?.spotify;
   const tracks = album.tracks ?? [];
 
+  function handlePreviewPlay(event) {
+    const currentAudio = event.target;
+    panelRef.current?.querySelectorAll("audio").forEach((audio) => {
+      if (audio !== currentAudio) {
+        audio.pause();
+      }
+    });
+  }
+
   return (
     <section ref={panelRef} className="album-detail" aria-label="Album tracks">
       <div className="album-detail-top">
@@ -55,7 +64,7 @@ const AlbumDetail = ({ album, isLoading, onClose }) => {
       {isLoading ? (
         <p className="status-message">Loading tracks…</p>
       ) : (
-        <ol className="track-list">
+        <ol className="track-list" onPlay={handlePreviewPlay}>
           {tracks.map((track) => (
             <li key={track.id}>
               <span className="track-number">{track.track_number}</span>

@@ -9,11 +9,14 @@ import {
   artistAlbumsUrl,
   artistUrl,
   prepareAlbums,
+  readFavorites,
   readRecent,
   relatedArtistsUrl,
   searchArtistsUrl,
+  sortAlbums,
   spotifyGet,
   SUGGESTED_ARTISTS,
+  writeFavorites,
   writeRecent,
 } from "./spotify";
 
@@ -22,6 +25,16 @@ const FILTERS = [
   { id: "single", label: "Singles", empty: "singles" },
   { id: "compilation", label: "Compilations", empty: "compilations" },
 ];
+
+function updateUrlParam(name, value) {
+  const url = new URL(window.location.href);
+  if (value) {
+    url.searchParams.set(name, value);
+  } else {
+    url.searchParams.delete(name);
+  }
+  window.history.replaceState(null, "", url);
+}
 
 const App = () => {
   const [searchInput, setSearchInput] = useState("");
@@ -40,6 +53,9 @@ const App = () => {
   const [isLoadingTracks, setIsLoadingTracks] = useState(false);
   const [relatedArtists, setRelatedArtists] = useState([]);
   const [linkCopied, setLinkCopied] = useState(false);
+  const [favorites, setFavorites] = useState(readFavorites);
+  const [activeView, setActiveView] = useState("browse");
+  const [sortBy, setSortBy] = useState("newest");
 
   const albumRequest = useRef(0);
   const trackRequest = useRef(0);
@@ -80,6 +96,12 @@ const App = () => {
     };
   }, []);
 
+  useEffect(() => {
+    document.title = selectedArtist
+      ? selectedArtist.name + " · Album Finder"
+      : "Album Finder";
+  }, [selectedArtist]);
+
   function rememberArtist(artist) {
     const entry = {
       id: artist.id,
@@ -89,6 +111,22 @@ const App = () => {
     setRecent((current) => {
       const next = [entry, ...current.filter((item) => item.id !== entry.id)].slice(0, 5);
       writeRecent(next);
+      return next;
+    });
+  }
+
+  function clearRecent() {
+    setRecent([]);
+    writeRecent([]);
+  }
+
+  function toggleFavorite(album) {
+    setFavorites((current) => {
+      const isSaved = current.some((item) => item.id === album.id);
+      const next = isSaved
+        ? current.filter((item) => item.id !== album.id)
+        : [album, ...current];
+      writeFavorites(next);
       return next;
     });
   }
@@ -173,9 +211,8 @@ const App = () => {
     }
 
     rememberArtist(fullArtist);
-    const nextUrlParams = new URL(window.location.href);
-    nextUrlParams.searchParams.set("artist", fullArtist.id);
-    window.history.replaceState(null, "", nextUrlParams);
+    updateUrlParam("artist", fullArtist.id);
+    updateUrlParam("album", "");
 
     setArtists((current) => {
       if (current.some((item) => item.id === fullArtist.id)) {
@@ -204,8 +241,15 @@ const App = () => {
   useEffect(() => {
     if (!accessToken || restoredRef.current) return;
     restoredRef.current = true;
-    const artistId = new URLSearchParams(window.location.search).get("artist");
-    if (!artistId) return;
+    const searchParams = new URLSearchParams(window.location.search);
+    const artistId = searchParams.get("artist");
+    const albumId = searchParams.get("album");
+    if (!artistId) {
+      if (albumId) {
+        openAlbum({ id: albumId, name: "Album", images: [] });
+      }
+      return;
+    }
 
     let cancelled = false;
 
@@ -222,6 +266,9 @@ const App = () => {
       setArtists([data]);
       await loadAlbums(data, { group: "album" });
       loadRelatedArtists(data.id);
+      if (albumId && !cancelled) {
+        openAlbum({ id: albumId, name: "Album", images: [] });
+      }
     }
 
     restoreArtist();
@@ -285,19 +332,20 @@ const App = () => {
   function changeGroup(group) {
     if (!selectedArtist || group === albumGroup) return;
     setAlbumGroup(group);
+    updateUrlParam("album", "");
     loadAlbums(selectedArtist, { group });
   }
 
   async function openAlbum(album) {
     if (albumDetail?.id === album.id) {
-      trackRequest.current += 1;
-      setAlbumDetail(null);
+      closeAlbumDetail();
       return;
     }
 
     const requestId = ++trackRequest.current;
     setAlbumDetail(album);
     setIsLoadingTracks(true);
+    updateUrlParam("album", album.id);
 
     try {
       const { ok, data } = await spotifyGet(albumUrl(album.id), accessToken);
@@ -333,6 +381,7 @@ const App = () => {
   const closeAlbumDetail = useCallback(() => {
     trackRequest.current += 1;
     setAlbumDetail(null);
+    updateUrlParam("album", "");
   }, []);
 
   async function copyArtistLink() {
@@ -348,6 +397,9 @@ const App = () => {
   const followerCount = selectedArtist?.followers?.total;
   const artistGenres = (selectedArtist?.genres ?? []).slice(0, 3).join(", ");
   const showEmptyState = !selectedArtist && !isSearching && recent.length === 0;
+  const favoriteIds = new Set(favorites.map((album) => album.id));
+  const sortedAlbums = sortAlbums(albums, sortBy);
+  const sortedFavorites = sortAlbums(favorites, sortBy);
 
   return (
     <main className="page">
@@ -356,12 +408,74 @@ const App = () => {
         <p>Search for an artist and browse their albums.</p>
       </header>
 
-      <Search
-        searchInput={searchInput}
-        setSearchInput={setSearchInput}
-        onSearch={search}
-        isLoading={isSearching}
-      />
+      <nav className="view-tabs" aria-label="Album Finder views">
+        <button
+          type="button"
+          className={activeView === "browse" ? "selected" : ""}
+          onClick={() => setActiveView("browse")}
+          aria-pressed={activeView === "browse"}
+        >
+          Browse
+        </button>
+        <button
+          type="button"
+          className={activeView === "favorites" ? "selected" : ""}
+          onClick={() => setActiveView("favorites")}
+          aria-pressed={activeView === "favorites"}
+        >
+          Favorites ({favorites.length})
+        </button>
+      </nav>
+
+      {activeView === "favorites" ? (
+        <section className="favorites-view">
+          <div className="section-heading">
+            <div>
+              <h2>Favorite releases</h2>
+              <p>Saved on this device.</p>
+            </div>
+            <label className="sort-control">
+              Sort
+              <select value={sortBy} onChange={(event) => setSortBy(event.target.value)}>
+                <option value="newest">Newest</option>
+                <option value="oldest">Oldest</option>
+                <option value="name">A–Z</option>
+              </select>
+            </label>
+          </div>
+
+          <AlbumDetail
+            album={albumDetail}
+            isLoading={isLoadingTracks}
+            onClose={closeAlbumDetail}
+          />
+
+          {sortedFavorites.length === 0 ? (
+            <p className="favorites-empty">
+              Select the heart on an album or single to save it here.
+            </p>
+          ) : (
+            <section className="album-grid" aria-label="Favorite releases">
+              {sortedFavorites.map((album) => (
+                <AlbumCard
+                  key={album.id}
+                  album={album}
+                  onOpen={openAlbum}
+                  isFavorite
+                  onToggleFavorite={toggleFavorite}
+                />
+              ))}
+            </section>
+          )}
+        </section>
+      ) : (
+        <>
+          <Search
+            searchInput={searchInput}
+            setSearchInput={setSearchInput}
+            onSearch={search}
+            isLoading={isSearching}
+          />
 
       {recent.length > 0 && (
         <div className="recent">
@@ -376,6 +490,9 @@ const App = () => {
               {artist.name}
             </button>
           ))}
+          <button type="button" className="clear-recent" onClick={clearRecent}>
+            Clear
+          </button>
         </div>
       )}
 
@@ -442,19 +559,29 @@ const App = () => {
       )}
 
       {selectedArtist && (
-        <div className="filters" role="group" aria-label="Release type">
-          {FILTERS.map((filter) => (
-            <button
-              key={filter.id}
-              type="button"
-              className={filter.id === albumGroup ? "selected" : ""}
-              onClick={() => changeGroup(filter.id)}
-              disabled={isLoadingAlbums}
-              aria-pressed={filter.id === albumGroup}
-            >
-              {filter.label}
-            </button>
-          ))}
+        <div className="catalog-controls">
+          <div className="filters" role="group" aria-label="Release type">
+            {FILTERS.map((filter) => (
+              <button
+                key={filter.id}
+                type="button"
+                className={filter.id === albumGroup ? "selected" : ""}
+                onClick={() => changeGroup(filter.id)}
+                disabled={isLoadingAlbums}
+                aria-pressed={filter.id === albumGroup}
+              >
+                {filter.label}
+              </button>
+            ))}
+          </div>
+          <label className="sort-control">
+            Sort
+            <select value={sortBy} onChange={(event) => setSortBy(event.target.value)}>
+              <option value="newest">Newest</option>
+              <option value="oldest">Oldest</option>
+              <option value="name">A–Z</option>
+            </select>
+          </label>
         </div>
       )}
 
@@ -465,8 +592,14 @@ const App = () => {
       />
 
       <section className="album-grid" aria-label="Albums">
-        {albums.map((album) => (
-          <AlbumCard key={album.id} album={album} onOpen={openAlbum} />
+        {sortedAlbums.map((album) => (
+          <AlbumCard
+            key={album.id}
+            album={album}
+            onOpen={openAlbum}
+            isFavorite={favoriteIds.has(album.id)}
+            onToggleFavorite={toggleFavorite}
+          />
         ))}
       </section>
 
@@ -504,6 +637,8 @@ const App = () => {
             ))}
           </ul>
         </section>
+      )}
+        </>
       )}
     </main>
   );

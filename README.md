@@ -23,6 +23,12 @@ Album Finder searches Spotify for an artist and shows their releases in a dark, 
 - [x] **Spotify access token is requested on the server and refreshed before it expires**
 - [x] **Suggested artists on the first visit, and a copy-link button for the current artist**
 - [x] **Related artists and 30-second track previews when Spotify provides them**
+- [x] **Favorite releases are saved on the current device**
+- [x] **Sort releases by newest, oldest, or name**
+- [x] **Clear recent searches**
+- [x] **Shareable album links restore the open track list**
+- [x] **Only one track preview plays at a time**
+- [x] **The browser tab shows the selected artist**
 
 ## Tech Stack
 

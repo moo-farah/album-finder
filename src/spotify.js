@@ -1,4 +1,5 @@
 export const RECENT_KEY = "album-finder-recent";
+export const FAVORITES_KEY = "album-finder-favorites";
 
 export const SUGGESTED_ARTISTS = ["Drake", "Radiohead", "Adele"];
 
@@ -58,6 +59,22 @@ export function prepareAlbums(items) {
   );
 }
 
+export function sortAlbums(items, sortBy) {
+  return [...items].sort((a, b) => {
+    if (sortBy === "oldest") {
+      return (a.release_date || "").localeCompare(b.release_date || "");
+    }
+
+    if (sortBy === "name") {
+      return (a.name || "").localeCompare(b.name || "", undefined, {
+        sensitivity: "base",
+      });
+    }
+
+    return (b.release_date || "").localeCompare(a.release_date || "");
+  });
+}
+
 export function formatDuration(ms) {
   const totalSeconds = Math.floor((ms || 0) / 1000);
   const minutes = Math.floor(totalSeconds / 60);
@@ -106,4 +123,17 @@ export function readRecent() {
 
 export function writeRecent(artists) {
   localStorage.setItem(RECENT_KEY, JSON.stringify(artists.slice(0, 5)));
+}
+
+export function readFavorites() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(FAVORITES_KEY) || "[]");
+    return Array.isArray(saved) ? saved : [];
+  } catch {
+    return [];
+  }
+}
+
+export function writeFavorites(albums) {
+  localStorage.setItem(FAVORITES_KEY, JSON.stringify(albums));
 }
