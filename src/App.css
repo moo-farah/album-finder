@@ -57,6 +57,48 @@
   min-width: 0;
 }
 
+.search-suggestions {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  left: 0;
+  z-index: 8;
+  margin: 0;
+  padding: 8px;
+  border-radius: 12px;
+  background: #181818;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+  list-style: none;
+}
+
+.search-suggestions button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: #fff;
+  cursor: pointer;
+  text-align: left;
+}
+
+.search-suggestions button:hover {
+  background: #2a2a2a;
+}
+
+.search-suggestions img,
+.search-suggestions .artist-fallback {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: #444;
+  flex-shrink: 0;
+}
+
 .search-icon {
   position: absolute;
   left: 14px;
@@ -201,7 +243,7 @@
   margin: 0 0 16px;
 }
 
-.recent span {
+.recent-label {
   color: #b3b3b3;
   font-size: 0.85rem;
 }
@@ -221,6 +263,34 @@
 .recent button,
 .filters button {
   padding: 8px 16px;
+}
+
+.recent-chip {
+  display: inline-flex;
+  align-items: center;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #2a2a2a;
+}
+
+.recent-chip button {
+  background: transparent;
+}
+
+.recent-chip .recent-remove {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  margin-right: 8px;
+  padding: 0;
+  border-radius: 50%;
+  color: #b3b3b3;
+}
+
+.recent-chip .recent-remove:hover {
+  background: #535353;
+  color: #fff;
 }
 
 .recent .clear-recent {
@@ -285,13 +355,26 @@
   font-size: 0.875rem;
 }
 
+.sort-select-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
 .sort-control select {
-  padding: 7px 30px 7px 10px;
+  appearance: none;
+  padding: 7px 34px 7px 10px;
   border: 1px solid #535353;
   border-radius: 6px;
   background: #181818;
   color: #fff;
   font: inherit;
+}
+
+.sort-icon {
+  position: absolute;
+  right: 8px;
+  pointer-events: none;
 }
 
 .artist-header {
@@ -328,7 +411,7 @@
   padding: 0;
   border: 0;
   background: none;
-  color: #1ed760;
+  color: #fff;
   font: inherit;
   font-weight: 700;
   cursor: pointer;
@@ -337,7 +420,7 @@
 .artist-header a:hover,
 .album-detail a:hover,
 .copy-link:hover {
-  color: #fff;
+  color: #b3b3b3;
 }
 
 .artist-actions {
@@ -509,6 +592,47 @@
   color: #b3b3b3;
   font-size: 0.875rem;
   line-height: 1.4;
+}
+
+.remove-favorite {
+  align-self: flex-start;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: #b3b3b3;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.remove-favorite:hover {
+  color: #fff;
+}
+
+.skeleton-line {
+  height: 14px;
+  border-radius: 4px;
+  background: #3e3e3e;
+}
+
+.skeleton-line.short {
+  width: 55%;
+}
+
+.skeleton .album-cover-fallback,
+.skeleton-line {
+  animation: pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.45;
+  }
 }
 
 .album-detail {

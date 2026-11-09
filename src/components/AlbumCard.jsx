@@ -6,7 +6,7 @@ const TYPE_LABELS = {
   single: "Single",
 };
 
-const AlbumCard = ({ album, onOpen, isFavorite, onToggleFavorite }) => {
+const AlbumCard = ({ album, onOpen, isFavorite, onToggleFavorite, showRemove }) => {
   const imageUrl = album.images?.[0]?.url;
   const spotifyUrl = album.external_urls?.spotify;
   const typeLabel = TYPE_LABELS[album.album_type] || "Album";
@@ -55,6 +55,15 @@ const AlbumCard = ({ album, onOpen, isFavorite, onToggleFavorite }) => {
       <p>
         {typeLabel} • {formatReleaseDate(album.release_date)}
       </p>
+      {showRemove && (
+        <button
+          type="button"
+          className="remove-favorite"
+          onClick={() => onToggleFavorite(album)}
+        >
+          Remove
+        </button>
+      )}
     </article>
   );
 };

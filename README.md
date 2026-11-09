@@ -29,6 +29,11 @@ Album Finder searches Spotify for an artist and shows their releases in a dark, 
 - [x] **Shareable album links restore the open track list**
 - [x] **Only one track preview plays at a time**
 - [x] **The browser tab shows the selected artist**
+- [x] **Type-ahead artist suggestions while you search**
+- [x] **Gray placeholder cards while albums load**
+- [x] **Albums vs singles is stored in the URL**
+- [x] **Remove a single recent search or favorite**
+- [x] **Press / to focus the search box**
 
 ## Tech Stack
 

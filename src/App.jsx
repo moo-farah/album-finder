@@ -1,9 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { X } from "lucide-react";
 import "./App.css";
 import Search from "./components/Search";
 import ArtistList from "./components/ArtistList";
 import AlbumCard from "./components/AlbumCard";
 import AlbumDetail from "./components/AlbumDetail";
+import AlbumSkeleton from "./components/AlbumSkeleton";
+import SortControl from "./components/SortControl";
 import {
   albumUrl,
   artistAlbumsUrl,
@@ -55,10 +58,13 @@ const App = () => {
   const [favorites, setFavorites] = useState(readFavorites);
   const [activeView, setActiveView] = useState("browse");
   const [sortBy, setSortBy] = useState("newest");
+  const [suggestions, setSuggestions] = useState([]);
 
   const albumRequest = useRef(0);
   const trackRequest = useRef(0);
   const restoredRef = useRef(false);
+  const searchInputRef = useRef(null);
+  const loadMoreRef = useRef(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -117,6 +123,14 @@ const App = () => {
   function clearRecent() {
     setRecent([]);
     writeRecent([]);
+  }
+
+  function removeRecent(artistId) {
+    setRecent((current) => {
+      const next = current.filter((item) => item.id !== artistId);
+      writeRecent(next);
+      return next;
+    });
   }
 
   function toggleFavorite(album) {
@@ -211,7 +225,9 @@ const App = () => {
 
     rememberArtist(fullArtist);
     updateUrlParam("artist", fullArtist.id);
+    updateUrlParam("type", group === "single" ? "single" : "");
     updateUrlParam("album", "");
+    setSuggestions([]);
 
     setArtists((current) => {
       if (current.some((item) => item.id === fullArtist.id)) {
@@ -243,6 +259,7 @@ const App = () => {
     const searchParams = new URLSearchParams(window.location.search);
     const artistId = searchParams.get("artist");
     const albumId = searchParams.get("album");
+    const group = searchParams.get("type") === "single" ? "single" : "album";
     if (!artistId) {
       if (albumId) {
         openAlbum({ id: albumId, name: "Album", images: [] });
@@ -260,10 +277,10 @@ const App = () => {
         return;
       }
 
-      setAlbumGroup("album");
+      setAlbumGroup(group);
       rememberArtist(data);
       setArtists([data]);
-      await loadAlbums(data, { group: "album" });
+      await loadAlbums(data, { group });
       loadRelatedArtists(data.id);
       if (albumId && !cancelled) {
         openAlbum({ id: albumId, name: "Album", images: [] });
@@ -331,6 +348,7 @@ const App = () => {
   function changeGroup(group) {
     if (!selectedArtist || group === albumGroup) return;
     setAlbumGroup(group);
+    updateUrlParam("type", group === "single" ? "single" : "");
     updateUrlParam("album", "");
     loadAlbums(selectedArtist, { group });
   }
@@ -383,6 +401,61 @@ const App = () => {
     updateUrlParam("album", "");
   }, []);
 
+  useEffect(() => {
+    const query = searchInput.trim();
+    if (query.length < 2 || !accessToken || isSearching) {
+      return;
+    }
+
+    const timer = window.setTimeout(async () => {
+      const { ok, data } = await spotifyGet(searchArtistsUrl(query), accessToken);
+      if (ok) {
+        setSuggestions(data.artists?.items ?? []);
+      }
+    }, 300);
+
+    return () => window.clearTimeout(timer);
+  }, [searchInput, accessToken, isSearching]);
+
+  useEffect(() => {
+    function onKeyDown(event) {
+      if (event.key !== "/" || event.metaKey || event.ctrlKey || event.altKey) {
+        return;
+      }
+      const tag = document.activeElement?.tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") {
+        return;
+      }
+      event.preventDefault();
+      searchInputRef.current?.focus();
+    }
+
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, []);
+
+  useEffect(() => {
+    if (!nextUrl || isLoadingMore || isLoadingAlbums || !selectedArtist) {
+      return;
+    }
+
+    const target = loadMoreRef.current;
+    if (!target) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) {
+          loadAlbums(selectedArtist, { append: true, url: nextUrl });
+        }
+      },
+      { rootMargin: "240px" }
+    );
+
+    observer.observe(target);
+    return () => observer.disconnect();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [nextUrl, isLoadingMore, isLoadingAlbums, selectedArtist]);
+
   async function copyArtistLink() {
     try {
       await navigator.clipboard.writeText(window.location.href);
@@ -399,6 +472,13 @@ const App = () => {
   const favoriteIds = new Set(favorites.map((album) => album.id));
   const sortedAlbums = sortAlbums(albums, sortBy);
   const sortedFavorites = sortAlbums(favorites, sortBy);
+  const dropdownSuggestions =
+    searchInput.trim().length < 2 ||
+    isSearching ||
+    (selectedArtist &&
+      searchInput.trim().toLowerCase() === selectedArtist.name.toLowerCase())
+      ? []
+      : suggestions;
 
   return (
     <main className="page">
@@ -433,14 +513,7 @@ const App = () => {
               <h2>Favorite releases</h2>
               <p>Saved on this device.</p>
             </div>
-            <label className="sort-control">
-              Sort
-              <select value={sortBy} onChange={(event) => setSortBy(event.target.value)}>
-                <option value="newest">Newest</option>
-                <option value="oldest">Oldest</option>
-                <option value="name">A–Z</option>
-              </select>
-            </label>
+            <SortControl sortBy={sortBy} onChange={setSortBy} />
           </div>
 
           <AlbumDetail
@@ -461,6 +534,7 @@ const App = () => {
                   album={album}
                   onOpen={openAlbum}
                   isFavorite
+                  showRemove
                   onToggleFavorite={toggleFavorite}
                 />
               ))}
@@ -474,20 +548,36 @@ const App = () => {
             setSearchInput={setSearchInput}
             onSearch={search}
             isLoading={isSearching}
+            suggestions={dropdownSuggestions}
+            inputRef={searchInputRef}
+            onSelectSuggestion={(artist) => {
+              setSearchInput(artist.name);
+              setSuggestions([]);
+              selectArtist(artist);
+            }}
           />
 
       {recent.length > 0 && (
         <div className="recent">
-          <span>Recent</span>
+          <span className="recent-label">Recent</span>
           {recent.map((artist) => (
-            <button
-              key={artist.id}
-              type="button"
-              onClick={() => selectArtist(artist)}
-              disabled={isSearching || isLoadingAlbums}
-            >
-              {artist.name}
-            </button>
+            <span key={artist.id} className="recent-chip">
+              <button
+                type="button"
+                onClick={() => selectArtist(artist)}
+                disabled={isSearching || isLoadingAlbums}
+              >
+                {artist.name}
+              </button>
+              <button
+                type="button"
+                className="recent-remove"
+                onClick={() => removeRecent(artist.id)}
+                aria-label={"Remove " + artist.name + " from recent searches"}
+              >
+                <X size={14} strokeWidth={2.5} />
+              </button>
+            </span>
           ))}
           <button type="button" className="clear-recent" onClick={clearRecent}>
             Clear
@@ -573,14 +663,7 @@ const App = () => {
               </button>
             ))}
           </div>
-          <label className="sort-control">
-            Sort
-            <select value={sortBy} onChange={(event) => setSortBy(event.target.value)}>
-              <option value="newest">Newest</option>
-              <option value="oldest">Oldest</option>
-              <option value="name">A–Z</option>
-            </select>
-          </label>
+          <SortControl sortBy={sortBy} onChange={setSortBy} />
         </div>
       )}
 
@@ -591,23 +674,26 @@ const App = () => {
       />
 
       <section className="album-grid" aria-label="Albums">
-        {sortedAlbums.map((album) => (
-          <AlbumCard
-            key={album.id}
-            album={album}
-            onOpen={openAlbum}
-            isFavorite={favoriteIds.has(album.id)}
-            onToggleFavorite={toggleFavorite}
-          />
-        ))}
+        {isLoadingAlbums && albums.length === 0
+          ? Array.from({ length: 8 }, (_, index) => <AlbumSkeleton key={index} />)
+          : sortedAlbums.map((album) => (
+              <AlbumCard
+                key={album.id}
+                album={album}
+                onOpen={openAlbum}
+                isFavorite={favoriteIds.has(album.id)}
+                onToggleFavorite={toggleFavorite}
+              />
+            ))}
       </section>
 
-      {nextUrl && (
+      {(nextUrl || isLoadingMore) && (
         <button
+          ref={loadMoreRef}
           type="button"
           className="load-more"
           onClick={() => loadAlbums(selectedArtist, { append: true, url: nextUrl })}
-          disabled={isLoadingMore || isLoadingAlbums}
+          disabled={isLoadingMore || isLoadingAlbums || !nextUrl}
         >
           {isLoadingMore ? "Loading more..." : "Load more"}
         </button>
